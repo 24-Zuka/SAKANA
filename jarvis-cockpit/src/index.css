@@ -1,0 +1,48 @@
+@import "tailwindcss";
+
+/* JARVIS Cockpit デザイン仕様書 v1.0 準拠（AirFlow Design Spec）。
+   §02 カラー / §03 タイポグラフィ / §06-08 コンポーネント・レイアウト。 */
+@theme {
+  --color-jarvis-bg: #0e1116;
+  --color-jarvis-panel: #141922;
+  --color-jarvis-panel2: #1a212c;
+  --color-jarvis-raise: #1f2733;
+  --color-jarvis-line: #242d3a;
+  --color-jarvis-linesoft: #1b222c;
+  --color-jarvis-logbg: #0a0d12;
+
+  --color-jarvis-text: #e6edf3;
+  --color-jarvis-text2: #98a6b6;
+  --color-jarvis-text3: #5d6b7b;
+
+  --color-jarvis-accent: #4ea1ff;
+  --color-jarvis-teal: #3fd8c8;
+  --color-jarvis-green: #3ed07e;
+  --color-jarvis-yellow: #f2c14e;
+  --color-jarvis-red: #f26d6d;
+  --color-jarvis-purple: #8b7cff;
+
+  --font-display: "Space Grotesk", "Hiragino Sans", system-ui, sans-serif;
+  --font-sans: "IBM Plex Sans", "Hiragino Sans", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background-color: var(--color-jarvis-bg);
+  color: var(--color-jarvis-text);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-jarvis-accent);
+  outline-offset: 2px;
+}
