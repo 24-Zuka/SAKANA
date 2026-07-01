@@ -1,0 +1,32 @@
+[project]
+name = "airflow-cockpit"
+version = "0.1.0"
+description = "AirFlow: local-first AI task orchestration engine (MVP) — see spec v1.0"
+requires-python = ">=3.11"
+dependencies = [
+    "pydantic>=2.6",
+    "python-frontmatter>=1.1",
+    "httpx>=0.27",
+    "click>=8.1",
+    "fastapi>=0.110",
+    "uvicorn>=0.29",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+]
+
+[project.scripts]
+airflowctl = "airflow.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/airflow"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

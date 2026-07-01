@@ -1,0 +1,41 @@
+@import "tailwindcss";
+
+/* JARVIS デザイン言語 — 仕様書 §7.4
+   ダーク基調 #0E1116 系＋低彩度シアン/ティール。
+   状態色: 緑=正常 / 黄=警告 / 赤=要対応。
+   本文サンセリフ、ログ/コード/差分は等幅。WCAG AA コントラスト。 */
+@theme {
+  --color-jarvis-bg: #0e1116;
+  --color-jarvis-surface: #151a21;
+  --color-jarvis-surface-raised: #1c222b;
+  --color-jarvis-border: #262d38;
+  --color-jarvis-text: #e6edf3;
+  --color-jarvis-text-muted: #8b98a5;
+  --color-jarvis-accent: #4fd1c5;
+  --color-jarvis-accent-dim: #2c7a75;
+  --color-jarvis-success: #3fb950;
+  --color-jarvis-warning: #d4a72c;
+  --color-jarvis-danger: #f85149;
+
+  --font-sans: "Inter", "Hiragino Sans", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background-color: var(--color-jarvis-bg);
+  color: var(--color-jarvis-text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-jarvis-accent);
+  outline-offset: 2px;
+}
