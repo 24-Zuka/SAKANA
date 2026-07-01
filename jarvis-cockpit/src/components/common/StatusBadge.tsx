@@ -1,19 +1,25 @@
 import type { Status } from "../../types/taskcard";
 
-const STATUS_STYLES: Record<Status, string> = {
-  Inbox: "bg-jarvis-surface-raised text-jarvis-text-muted border-jarvis-border",
-  Today: "bg-jarvis-accent-dim/30 text-jarvis-accent border-jarvis-accent-dim",
-  Doing: "bg-jarvis-warning/15 text-jarvis-warning border-jarvis-warning/40",
-  Waiting: "bg-jarvis-danger/15 text-jarvis-danger border-jarvis-danger/40",
-  Done: "bg-jarvis-success/15 text-jarvis-success border-jarvis-success/40",
+// デザイン仕様書 §04: ステータス・色対応表に厳密準拠。
+// Inbox=灰 / Today=Accent / Doing=Green / Waiting=Yellow(要判断) / Done=灰(muted)。
+const STATUS_DOT: Record<Status, string> = {
+  Inbox: "bg-jarvis-text3",
+  Today: "bg-jarvis-accent",
+  Doing: "bg-jarvis-green",
+  Waiting: "bg-jarvis-yellow",
+  Done: "bg-jarvis-text3",
 };
 
 export function StatusBadge({ status }: { status: Status }) {
   return (
-    <span
-      className={`inline-flex items-center rounded border px-2 py-0.5 text-xs font-mono ${STATUS_STYLES[status]}`}
-    >
+    <span className="inline-flex items-center gap-1.5 text-xs text-jarvis-text2">
+      <span className={`h-2 w-2 rounded-full ${STATUS_DOT[status]}`} aria-hidden />
       {status}
+      {status === "Waiting" && (
+        <span className="inline-flex items-center rounded-[5px] bg-jarvis-yellow/12 px-2 py-0.5 text-[11px] font-semibold text-jarvis-yellow">
+          要判断
+        </span>
+      )}
     </span>
   );
 }

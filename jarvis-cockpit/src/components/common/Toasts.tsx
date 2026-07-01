@@ -1,9 +1,9 @@
 import { useAppStore } from "../../store/useAppStore";
 
 const KIND_STYLES: Record<string, string> = {
-  info: "border-jarvis-border text-jarvis-text",
-  success: "border-jarvis-success/40 text-jarvis-success",
-  error: "border-jarvis-danger/40 text-jarvis-danger",
+  info: "border-jarvis-line text-jarvis-text",
+  success: "border-jarvis-green/40 text-jarvis-green",
+  error: "border-jarvis-red/40 text-jarvis-red",
 };
 
 export function Toasts() {
@@ -16,7 +16,7 @@ export function Toasts() {
         <div
           key={t.id}
           role="status"
-          className={`pointer-events-auto rounded border bg-jarvis-surface px-4 py-2 text-sm shadow-lg ${KIND_STYLES[t.kind]}`}
+          className={`pointer-events-auto rounded border bg-jarvis-panel px-4 py-2 text-sm shadow-lg ${KIND_STYLES[t.kind]}`}
         >
           <div className="flex items-center gap-3">
             <span>{t.message}</span>
@@ -24,7 +24,7 @@ export function Toasts() {
               type="button"
               onClick={() => dismissToast(t.id)}
               aria-label="閉じる"
-              className="text-jarvis-text-muted hover:text-jarvis-text"
+              className="text-jarvis-text2 hover:text-jarvis-text"
             >
               ×
             </button>

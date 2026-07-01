@@ -1,24 +1,30 @@
 @import "tailwindcss";
 
-/* JARVIS デザイン言語 — 仕様書 §7.4
-   ダーク基調 #0E1116 系＋低彩度シアン/ティール。
-   状態色: 緑=正常 / 黄=警告 / 赤=要対応。
-   本文サンセリフ、ログ/コード/差分は等幅。WCAG AA コントラスト。 */
+/* JARVIS Cockpit デザイン仕様書 v1.0 準拠（AirFlow Design Spec）。
+   §02 カラー / §03 タイポグラフィ / §06-08 コンポーネント・レイアウト。 */
 @theme {
   --color-jarvis-bg: #0e1116;
-  --color-jarvis-surface: #151a21;
-  --color-jarvis-surface-raised: #1c222b;
-  --color-jarvis-border: #262d38;
-  --color-jarvis-text: #e6edf3;
-  --color-jarvis-text-muted: #8b98a5;
-  --color-jarvis-accent: #4fd1c5;
-  --color-jarvis-accent-dim: #2c7a75;
-  --color-jarvis-success: #3fb950;
-  --color-jarvis-warning: #d4a72c;
-  --color-jarvis-danger: #f85149;
+  --color-jarvis-panel: #141922;
+  --color-jarvis-panel2: #1a212c;
+  --color-jarvis-raise: #1f2733;
+  --color-jarvis-line: #242d3a;
+  --color-jarvis-linesoft: #1b222c;
+  --color-jarvis-logbg: #0a0d12;
 
-  --font-sans: "Inter", "Hiragino Sans", "Segoe UI", system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+  --color-jarvis-text: #e6edf3;
+  --color-jarvis-text2: #98a6b6;
+  --color-jarvis-text3: #5d6b7b;
+
+  --color-jarvis-accent: #4ea1ff;
+  --color-jarvis-teal: #3fd8c8;
+  --color-jarvis-green: #3ed07e;
+  --color-jarvis-yellow: #f2c14e;
+  --color-jarvis-red: #f26d6d;
+  --color-jarvis-purple: #8b7cff;
+
+  --font-display: "Space Grotesk", "Hiragino Sans", system-ui, sans-serif;
+  --font-sans: "IBM Plex Sans", "Hiragino Sans", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", "SFMono-Regular", Menlo, Consolas, monospace;
 }
 
 html,
@@ -32,6 +38,7 @@ body {
   background-color: var(--color-jarvis-bg);
   color: var(--color-jarvis-text);
   font-family: var(--font-sans);
+  font-size: 13px;
   -webkit-font-smoothing: antialiased;
 }
 

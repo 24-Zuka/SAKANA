@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { api } from "../../lib/api";
 import type { CockpitSettings } from "../../types/cockpit";
 import { useAppStore } from "../../store/useAppStore";
+import { Card, CardHeading } from "../../components/common/Card";
+import { GhostButton } from "../../components/common/Button";
 
 // Settings — spec §7.2: ブリッジ接続/パス/トークン/LM Studio疎通テスト/codex login起動。
 // **APIキー入力欄は仕様通り存在させない**（P2）。
@@ -16,7 +18,7 @@ export function Settings() {
   }, []);
 
   if (!settings) {
-    return <p className="text-sm text-jarvis-text-muted">読み込み中…</p>;
+    return <p className="text-sm text-jarvis-text3">読み込み中…</p>;
   }
 
   async function save(patch: Partial<CockpitSettings>) {
@@ -36,73 +38,72 @@ export function Settings() {
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-lg font-semibold">Settings</h1>
+      <h1 className="font-display text-2xl font-bold">Settings</h1>
 
-      <section className="rounded-lg border border-jarvis-border bg-jarvis-surface p-4">
-        <h2 className="text-sm font-semibold text-jarvis-text-muted">ブリッジ接続</h2>
+      <Card>
+        <CardHeading>ブリッジ接続</CardHeading>
         <div className="mt-3 flex flex-col gap-2">
-          <label className="text-xs text-jarvis-text-muted">
+          <label className="text-xs text-jarvis-text2">
             URL
             <input
               defaultValue={settings.bridgeUrl}
               onBlur={(e) => save({ bridgeUrl: e.target.value })}
-              className="mt-1 w-full rounded border border-jarvis-border bg-jarvis-bg px-3 py-1.5 text-sm outline-none focus:border-jarvis-accent"
+              className="mt-1 w-full rounded-lg border border-jarvis-line bg-jarvis-bg px-3 py-1.5 text-sm outline-none focus:border-jarvis-accent"
             />
           </label>
-          <label className="text-xs text-jarvis-text-muted">
+          <label className="text-xs text-jarvis-text2">
             トークン（Keychain保存想定・画面には平文表示しない）
             <input
               type="password"
               defaultValue={settings.bridgeToken}
               onBlur={(e) => save({ bridgeToken: e.target.value })}
-              className="mt-1 w-full rounded border border-jarvis-border bg-jarvis-bg px-3 py-1.5 text-sm outline-none focus:border-jarvis-accent"
+              className="mt-1 w-full rounded-lg border border-jarvis-line bg-jarvis-bg px-3 py-1.5 text-sm outline-none focus:border-jarvis-accent"
             />
           </label>
         </div>
-      </section>
+      </Card>
 
-      <section className="rounded-lg border border-jarvis-border bg-jarvis-surface p-4">
-        <h2 className="text-sm font-semibold text-jarvis-text-muted">LM Studio</h2>
+      <Card>
+        <CardHeading>LM Studio</CardHeading>
         <div className="mt-3 flex gap-2">
           <input
             defaultValue={settings.lmStudioBaseUrl}
             onBlur={(e) => save({ lmStudioBaseUrl: e.target.value })}
-            className="flex-1 rounded border border-jarvis-border bg-jarvis-bg px-3 py-1.5 text-sm outline-none focus:border-jarvis-accent"
+            className="flex-1 rounded-lg border border-jarvis-line bg-jarvis-bg px-3 py-1.5 text-sm outline-none focus:border-jarvis-accent"
           />
-          <button
-            type="button"
+          <GhostButton
             onClick={testLmStudio}
-            className="rounded border border-jarvis-accent-dim px-3 py-1.5 text-sm text-jarvis-accent hover:bg-jarvis-accent-dim/20"
+            className="border-jarvis-accent/40 text-jarvis-accent hover:bg-jarvis-accent/20"
           >
             疎通テスト
-          </button>
+          </GhostButton>
         </div>
-        {testResult && <p className="mt-2 text-xs text-jarvis-text-muted">{testResult}</p>}
-      </section>
+        {testResult && <p className="mt-2 text-xs text-jarvis-text3">{testResult}</p>}
+      </Card>
 
-      <section className="rounded-lg border border-jarvis-border bg-jarvis-surface p-4">
-        <h2 className="text-sm font-semibold text-jarvis-text-muted">Obsidian Vault パス</h2>
+      <Card>
+        <CardHeading>Obsidian Vault パス</CardHeading>
         <input
           defaultValue={settings.obsidianVaultPath}
           onBlur={(e) => save({ obsidianVaultPath: e.target.value })}
           placeholder="/path/to/vault（未設定＝書き出しOFF）"
-          className="mt-3 w-full rounded border border-jarvis-border bg-jarvis-bg px-3 py-1.5 text-sm outline-none focus:border-jarvis-accent"
+          className="mt-3 w-full rounded-lg border border-jarvis-line bg-jarvis-bg px-3 py-1.5 text-sm outline-none focus:border-jarvis-accent"
         />
-      </section>
+      </Card>
 
-      <section className="rounded-lg border border-jarvis-border bg-jarvis-surface p-4">
-        <h2 className="text-sm font-semibold text-jarvis-text-muted">Codexログイン</h2>
-        <p className="mt-2 text-xs text-jarvis-text-muted">
+      <Card>
+        <CardHeading>Codexログイン</CardHeading>
+        <p className="mt-2 text-xs text-jarvis-text3">
           `codex login`（ChatGPTアカウント）で認証してください。APIキー入力欄はP2に従いこのUIには存在しません。
         </p>
         <button
           type="button"
           disabled
-          className="mt-2 cursor-not-allowed rounded border border-jarvis-border px-3 py-1.5 text-sm text-jarvis-text-muted opacity-50"
+          className="mt-2 cursor-not-allowed rounded-lg border border-jarvis-line px-3 py-1.5 text-sm text-jarvis-text3 opacity-50"
         >
           codex login を起動（デスクトップ実機のみ・本環境では未対応）
         </button>
-      </section>
+      </Card>
     </div>
   );
 }

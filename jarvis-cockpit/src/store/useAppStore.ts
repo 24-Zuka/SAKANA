@@ -5,6 +5,8 @@ export interface ApprovalRequest {
   title: string;
   description: string;
   riskScore?: number;
+  // デザイン仕様書 §07: 対象・検証結果・レビュー件数などを明示するための任意の詳細行。
+  details?: { label: string; value: string }[];
   onApprove: () => void | Promise<void>;
   onReject?: () => void;
 }

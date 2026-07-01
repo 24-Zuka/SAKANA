@@ -17,7 +17,11 @@ test.describe("8画面のスモークテスト", () => {
       const errors: string[] = [];
       page.on("pageerror", (err) => errors.push(err.message));
       page.on("console", (msg) => {
-        if (msg.type() === "error") errors.push(msg.text());
+        // ネットワーク遮断環境ではGoogle Fontsの読み込み失敗がconsole.errorとして
+        // 記録されるが、アプリのJSエラーではないため除外する。
+        if (msg.type() === "error" && !/Failed to load resource/.test(msg.text())) {
+          errors.push(msg.text());
+        }
       });
 
       await page.goto(screen.path);
@@ -42,9 +46,10 @@ test("Build画面: ビルド実行→mainへマージでApprovalModalが開閉�
   await expect(mergeButton).toBeEnabled({ timeout: 5000 });
   await mergeButton.click();
 
-  await expect(page.getByRole("dialog", { name: "" }).getByText("承認が必要です")).toBeVisible();
+  await expect(page.getByRole("dialog").getByText("承認モーダル")).toBeVisible();
+  await expect(page.getByText("レビュー件数")).toBeVisible();
   await page.getByRole("button", { name: "Reject" }).click();
-  await expect(page.getByText("承認が必要です")).not.toBeVisible();
+  await expect(page.getByText("承認モーダル")).not.toBeVisible();
 });
 
 test("⌘Kコマンドパレットがキーボードショートカットで開閉する", async ({ page }) => {

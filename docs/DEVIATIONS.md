@@ -30,6 +30,18 @@
   Dashboard/Buildはフル、Memoryは読取専用、Agents/Schedule/Research/Quota&Costは軽量実装）。
   ApprovalModal・⌘Kコマンドパレットは横断機能として実装。
 
+## デザイン準拠について
+
+初回実装時は claude.ai/design のURLが本環境から取得不能だったため、仕様書 §7.4 の文章記述のみを
+根拠にUIを実装した。その後、ユーザーから正式なデザイン仕様書HTML（AirFlow Design Spec v1.0）が
+アップロードされ、そこに明記された正確なカラートークン（#0E1116/#141922/#4EA1FF等）・タイポグラフィ
+（Space Grotesk/IBM Plex Sans/IBM Plex Mono）・コンポーネント寸法（ヘルスピル30px・バッジradius5px・
+トグル38×22px等）・レイアウト（サイドバー236px・管制/運用2グループ・ウィンドウ幅1280px）に
+正確に準拠するようリスタイルした。`jarvis-cockpit/src/index.css` の `@theme` と
+`components/common/{Card,Button,CategoryBadge,Toggle}.tsx` がその実装。
+なお本環境はGoogle Fontsサーバーに到達できないため、指定フォントは読み込み失敗時に
+システムフォントへ自動フォールバックする（`<link>`タグ自体は正しく設置済み）。
+
 ## 続行作業（macOS実機セッション向け）
 
 1. `src-tauri/`（Rust + Tauri 2）を追加し、`jarvis-cockpit`のフロントエンドをネイティブ化する。

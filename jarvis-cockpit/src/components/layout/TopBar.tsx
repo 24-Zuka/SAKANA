@@ -28,17 +28,17 @@ export function TopBar() {
   }, []);
 
   return (
-    <header className="flex h-14 shrink-0 items-center justify-between border-b border-jarvis-border bg-jarvis-surface px-4">
-      <div className="flex items-center gap-3 text-sm text-jarvis-text-muted">
-        <span className="rounded border border-jarvis-accent-dim px-2 py-0.5 font-mono text-xs text-jarvis-accent">
+    <header className="flex h-14 shrink-0 items-center justify-between border-b border-jarvis-line bg-jarvis-panel px-4">
+      <div className="flex items-center gap-3 text-sm text-jarvis-text2">
+        <span className="rounded-[5px] bg-jarvis-accent/12 px-2 py-0.5 font-mono text-xs font-semibold text-jarvis-accent">
           {TRANSPORT_LABEL[api.transportName]}
         </span>
-        <span className="font-mono text-xs">{homeLabel}</span>
+        <span className="font-mono text-xs text-jarvis-text3">{homeLabel}</span>
       </div>
       <button
         type="button"
         onClick={toggleCommandPalette}
-        className="rounded border border-jarvis-border px-3 py-1 text-xs text-jarvis-text-muted hover:bg-jarvis-surface-raised"
+        className="rounded-lg border border-jarvis-line px-3 py-1 text-xs text-jarvis-text2 hover:bg-jarvis-panel2"
       >
         ⌘K コマンド
       </button>

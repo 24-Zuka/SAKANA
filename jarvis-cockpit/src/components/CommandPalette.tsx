@@ -57,19 +57,25 @@ export function CommandPalette() {
       onClick={() => setOpen(false)}
     >
       <div
-        className="w-full max-w-lg rounded-lg border border-jarvis-border bg-jarvis-surface shadow-xl"
+        className="w-full max-w-lg rounded-[13px] border border-jarvis-line bg-jarvis-panel shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
+        <div className="flex items-center gap-2 border-b border-jarvis-line px-4 py-2">
+          <span className="inline-flex items-center rounded-[5px] bg-jarvis-accent/12 px-2 py-0.5 text-[11px] font-semibold text-jarvis-accent">
+            ⌘K
+          </span>
+          <span className="text-[11px] text-jarvis-text3">全操作をキーボードから</span>
+        </div>
         <input
           autoFocus
           placeholder="コマンドを検索… (⌘K)"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          className="w-full rounded-t-lg border-b border-jarvis-border bg-transparent px-4 py-3 text-sm text-jarvis-text outline-none placeholder:text-jarvis-text-muted"
+          className="w-full border-b border-jarvis-line bg-transparent px-4 py-3 text-sm text-jarvis-text outline-none placeholder:text-jarvis-text2"
         />
         <ul className="max-h-72 overflow-auto py-1">
           {filtered.length === 0 && (
-            <li className="px-4 py-2 text-sm text-jarvis-text-muted">一致するコマンドがありません</li>
+            <li className="px-4 py-2 text-sm text-jarvis-text2">一致するコマンドがありません</li>
           )}
           {filtered.map((c) => (
             <li key={c.id}>
@@ -80,7 +86,7 @@ export function CommandPalette() {
                   setOpen(false);
                   setQuery("");
                 }}
-                className="w-full px-4 py-2 text-left text-sm text-jarvis-text hover:bg-jarvis-surface-raised"
+                className="w-full px-4 py-2 text-left text-sm text-jarvis-text hover:bg-jarvis-panel2"
               >
                 {c.label}
               </button>
