@@ -4,7 +4,10 @@ from airflow.cli import main
 
 
 def _runner_env(tmp_path):
-    return {"AIRFLOW_HOME": str(tmp_path / "home")}
+    return {
+        "AIRFLOW_HOME": str(tmp_path / "home"),
+        "AIRFLOW_LAUNCH_AGENTS_DIR": str(tmp_path / "LaunchAgents"),
+    }
 
 
 def test_status_on_empty_store(tmp_path):
@@ -67,13 +70,61 @@ def test_list_filters_by_status_and_category(tmp_path):
     assert "A社" not in result.output
 
 
-def test_stub_commands_do_not_crash(tmp_path):
+def test_install_launchd_writes_plists_but_skips_launchctl_on_non_macos(tmp_path):
     runner = CliRunner()
     env = _runner_env(tmp_path)
-    for args in (["install-launchd"], ["uninstall-launchd"], ["configure-obsidian", "--enable"]):
-        result = runner.invoke(main, args, env=env)
-        assert result.exit_code == 0
-        assert "未対応" in result.output or "未実装" in result.output
+
+    result = runner.invoke(main, ["install-launchd"], env=env)
+    assert result.exit_code == 0
+    assert "登録しました" in result.output
+    assert "launchctl loadは実行していません" in result.output
+    launch_agents_dir = tmp_path / "LaunchAgents"
+    assert (launch_agents_dir / "com.local.AirFlow.brief.plist").exists()
+    assert (launch_agents_dir / "com.local.AirFlow.grooming.plist").exists()
+    assert (launch_agents_dir / "com.local.AirFlow.inbox.plist").exists()
+
+
+def test_uninstall_launchd_removes_plists(tmp_path):
+    runner = CliRunner()
+    env = _runner_env(tmp_path)
+    runner.invoke(main, ["install-launchd"], env=env)
+
+    result = runner.invoke(main, ["uninstall-launchd"], env=env)
+    assert result.exit_code == 0
+    assert "解除しました" in result.output
+    launch_agents_dir = tmp_path / "LaunchAgents"
+    assert not (launch_agents_dir / "com.local.AirFlow.brief.plist").exists()
+
+
+def test_uninstall_launchd_when_nothing_registered(tmp_path):
+    runner = CliRunner()
+    env = _runner_env(tmp_path)
+    result = runner.invoke(main, ["uninstall-launchd"], env=env)
+    assert result.exit_code == 0
+    assert "ジョブはありませんでした" in result.output
+
+
+def test_configure_obsidian_enable_and_disable_persist(tmp_path):
+    runner = CliRunner()
+    env = _runner_env(tmp_path)
+
+    enable_result = runner.invoke(main, ["configure-obsidian", "--enable"], env=env)
+    assert enable_result.exit_code == 0
+    assert "有効化しました" in enable_result.output
+
+    disable_result = runner.invoke(main, ["configure-obsidian", "--disable"], env=env)
+    assert disable_result.exit_code == 0
+    assert "無効化しました" in disable_result.output
+
+
+def test_configure_obsidian_detect_reports_unreachable_in_this_environment(tmp_path):
+    runner = CliRunner()
+    env = _runner_env(tmp_path)
+    result = runner.invoke(main, ["configure-obsidian", "--detect", "--enable"], env=env)
+    assert result.exit_code == 0
+    assert "疎通" in result.output
+    assert "不可（未接続）" in result.output
+    assert "スキップしました" in result.output
 
 
 def test_red_flag_when_api_key_env_present(tmp_path, monkeypatch):
@@ -83,3 +134,27 @@ def test_red_flag_when_api_key_env_present(tmp_path, monkeypatch):
     env["OPENAI_API_KEY"] = "sk-fake"
     result = runner.invoke(main, ["status"], env=env)
     assert "赤旗" in result.output
+
+
+def test_run_command_degrades_gracefully_without_real_workers(tmp_path):
+    runner = CliRunner()
+    env = _runner_env(tmp_path)
+    add_result = runner.invoke(main, ["add", "サーバーのバグを修正する"], env=env)
+    ticket_id = add_result.output.split("起票しました: ")[1].split(" ")[0]
+
+    result = runner.invoke(main, ["run", ticket_id], env=env)
+    assert result.exit_code == 0
+    assert ticket_id in result.output
+    assert "status=" in result.output
+    assert "decision_required=" in result.output
+
+
+def test_groom_command_runs_without_error(tmp_path):
+    runner = CliRunner()
+    env = _runner_env(tmp_path)
+    runner.invoke(main, ["add", "何かのタスク"], env=env)
+
+    result = runner.invoke(main, ["groom"], env=env)
+    assert result.exit_code == 0
+    assert "期限切れ注記" in result.output
+    assert "Done圧縮" in result.output
