@@ -13,7 +13,9 @@ from __future__ import annotations
 
 import os
 import plistlib
+import shutil
 import sys
+from datetime import datetime
 from pathlib import Path
 
 from ..guard import run_guarded
@@ -21,6 +23,12 @@ from ..guard import run_guarded
 JOB_BRIEF = "com.local.AirFlow.brief"
 JOB_GROOMING = "com.local.AirFlow.grooming"
 JOB_INBOX = "com.local.AirFlow.inbox"
+
+JOB_SCHEDULES: dict[str, str] = {
+    JOB_BRIEF: "毎朝 07:30",
+    JOB_GROOMING: "毎晩 23:00",
+    JOB_INBOX: "ファイル変更時（WatchPaths）",
+}
 
 DEFAULT_LAUNCH_AGENTS_DIR = Path.home() / "Library" / "LaunchAgents"
 DEFAULT_LOG_DIR = Path.home() / "Library" / "Logs"
@@ -36,6 +44,21 @@ def default_launch_agents_dir() -> Path:
     return Path(override) if override else DEFAULT_LAUNCH_AGENTS_DIR
 
 
+def default_log_dir() -> Path:
+    """`AIRFLOW_LOG_DIR` でテスト/開発用に上書き可能にする（既定は実際のmacOSパス）。
+
+    実機のlaunchdはplistの`StandardOutPath`へジョブ出力を書くが、ブリッジ経由の
+    手動実行（`/launchd/{id}/run`）でも同じログファイルへ追記することで、
+    最終実行時刻・末尾ログをmacOS実機/この開発環境の双方で一貫して確認できる。
+    """
+    override = os.environ.get("AIRFLOW_LOG_DIR")
+    return Path(override) if override else DEFAULT_LOG_DIR
+
+
+def resolve_airflowctl_bin() -> str:
+    return shutil.which("airflowctl") or str(Path(sys.executable).parent / "airflowctl")
+
+
 def _plist_dict(
     label: str,
     program_args: list[str],
@@ -47,8 +70,8 @@ def _plist_dict(
         "Label": label,
         "ProgramArguments": program_args,
         "RunAtLoad": False,
-        "StandardOutPath": str(DEFAULT_LOG_DIR / f"{label}.log"),
-        "StandardErrorPath": str(DEFAULT_LOG_DIR / f"{label}.err.log"),
+        "StandardOutPath": str(default_log_dir() / f"{label}.log"),
+        "StandardErrorPath": str(default_log_dir() / f"{label}.err.log"),
     }
     if calendar_interval is not None:
         plist["StartCalendarInterval"] = calendar_interval
@@ -108,3 +131,63 @@ def uninstall(label: str, *, launch_agents_dir: Path | None = None) -> bool:
         run_guarded(["launchctl", "unload", str(path)], capture_output=True, text=True)
     path.unlink()
     return True
+
+
+def _disabled_path(target_dir: Path, label: str) -> Path:
+    return target_dir / f"{label}.plist.disabled"
+
+
+def list_jobs(*, launch_agents_dir: Path | None = None) -> list[dict]:
+    """Cockpit の Schedule 画面向けに3ジョブの現況を返す（未登録でも一覧には出す）。"""
+    target_dir = launch_agents_dir or default_launch_agents_dir()
+    jobs = []
+    for label, schedule in JOB_SCHEDULES.items():
+        plist_path = target_dir / f"{label}.plist"
+        log_path = default_log_dir() / f"{label}.log"
+        last_run_at = None
+        last_log_tail = ""
+        if log_path.exists():
+            try:
+                stat = log_path.stat()
+                last_run_at = datetime.fromtimestamp(stat.st_mtime).astimezone().isoformat()
+                lines = log_path.read_text(encoding="utf-8", errors="replace").splitlines()
+                last_log_tail = "\n".join(lines[-20:])
+            except OSError:
+                pass
+        jobs.append(
+            {
+                "id": label,
+                "label": label,
+                "schedule": schedule,
+                "enabled": plist_path.exists(),
+                "lastRunAt": last_run_at,
+                "lastLogTail": last_log_tail,
+            }
+        )
+    return jobs
+
+
+def set_enabled(label: str, enabled: bool, *, launch_agents_dir: Path | None = None) -> None:
+    """既に登録済みのジョブをplist名の付け替えで有効/無効切替する（darwinではlaunchctlも連動）。"""
+    target_dir = launch_agents_dir or default_launch_agents_dir()
+    plist_path = target_dir / f"{label}.plist"
+    disabled_path = _disabled_path(target_dir, label)
+    if enabled:
+        if disabled_path.exists() and not plist_path.exists():
+            disabled_path.rename(plist_path)
+            if is_macos():
+                run_guarded(["launchctl", "load", str(plist_path)], capture_output=True, text=True)
+    else:
+        if plist_path.exists():
+            if is_macos():
+                run_guarded(["launchctl", "unload", str(plist_path)], capture_output=True, text=True)
+            plist_path.rename(disabled_path)
+
+
+def append_job_log(label: str, text: str, *, now: datetime | None = None) -> None:
+    """ブリッジ経由の手動実行結果を、実機launchdと同じログファイルへ追記する。"""
+    log_dir = default_log_dir()
+    log_dir.mkdir(parents=True, exist_ok=True)
+    now = now or datetime.now().astimezone()
+    with (log_dir / f"{label}.log").open("a", encoding="utf-8") as f:
+        f.write(f"[{now.isoformat(timespec='seconds')}] {text}\n")

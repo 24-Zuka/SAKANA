@@ -1,4 +1,4 @@
-import type { TaskCard } from "../types/taskcard";
+import type { Status, TaskCard } from "../types/taskcard";
 import type { Brief, HealthStatus } from "../types/taskcard";
 import type {
   AgentInfo,
@@ -20,6 +20,11 @@ export interface AirflowApi {
   listTickets(filter?: TicketFilter): Promise<TaskCard[]>;
   getTicket(id: string): Promise<TaskCard>;
   createTicket(text: string): Promise<TaskCard>;
+  // §4.4のステータス遷移図を検証する。risk_score>=RISK_APPROVAL_THRESHOLDの遷移は
+  // `approved: true` が無ければ拒否される（§8.3）。
+  updateTicketStatus(id: string, status: Status, options?: { approved?: boolean }): Promise<TaskCard>;
+  // §5.1のPlan→Route→Execute→Verifyクローズドループを起動する。Mock以外はbridge接続時のみ意味を持つ。
+  runTicket(id: string): Promise<TaskCard>;
   getLatestBrief(): Promise<Brief>;
 
   listAgents(): Promise<AgentInfo[]>;

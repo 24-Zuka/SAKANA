@@ -91,3 +91,28 @@ def test_set_obsidian_export_enabled_preserves_other_json_keys(tmp_path, monkeyp
     data = json.loads((tmp_path / "config.json").read_text(encoding="utf-8"))
     assert data["some_other_key"] == "value"
     assert data["obsidian_export_enabled"] is True
+
+
+def test_update_settings_persists_and_is_visible_on_reload(tmp_path, monkeypatch):
+    _clear_env(monkeypatch)
+    monkeypatch.setenv("AIRFLOW_HOME", str(tmp_path))
+    config = AirflowConfig.load()
+    updated = config.update_settings(lm_studio_base_url="http://updated:1234/v1", vault_path="/new/vault")
+
+    assert updated.lm_studio_base_url == "http://updated:1234/v1"
+    assert updated.vault_path == "/new/vault"
+
+    reloaded = AirflowConfig.load()
+    assert reloaded.lm_studio_base_url == "http://updated:1234/v1"
+    assert reloaded.vault_path == "/new/vault"
+
+
+def test_update_settings_env_var_still_wins_over_json(tmp_path, monkeypatch):
+    _clear_env(monkeypatch)
+    monkeypatch.setenv("AIRFLOW_HOME", str(tmp_path))
+    config = AirflowConfig.load()
+    config.update_settings(lm_studio_base_url="http://from-json:1234/v1")
+
+    monkeypatch.setenv("AIRFLOW_LM_STUDIO_URL", "http://from-env:1234/v1")
+    reloaded = AirflowConfig.load()
+    assert reloaded.lm_studio_base_url == "http://from-env:1234/v1"

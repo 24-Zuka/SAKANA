@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../../lib/api";
+import { nextStatusOptions } from "../../lib/statusTransitions";
 import type { HealthStatus, TaskCard } from "../../types/taskcard";
+import { RISK_APPROVAL_THRESHOLD } from "../../types/taskcard";
 import type { QuotaStatus } from "../../types/cockpit";
 import { StatusBadge } from "../../components/common/StatusBadge";
 import { RiskBadge } from "../../components/common/RiskBadge";
@@ -19,6 +21,7 @@ export function Dashboard() {
   const [newTicketText, setNewTicketText] = useState("");
   const [creating, setCreating] = useState(false);
   const pushToast = useAppStore((s) => s.pushToast);
+  const requestApproval = useAppStore((s) => s.requestApproval);
   const navigate = useNavigate();
 
   async function refreshTickets() {
@@ -63,6 +66,44 @@ export function Dashboard() {
       pushToast("起票に失敗しました", "error");
     } finally {
       setCreating(false);
+    }
+  }
+
+  async function applyStatusTransition(ticket: TaskCard, next: TaskCard["status"], approved?: boolean) {
+    try {
+      const updated = await api.updateTicketStatus(ticket.id, next, approved ? { approved: true } : undefined);
+      setTickets((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
+      pushToast(`${ticket.id} を ${next} に更新しました`, "success");
+    } catch {
+      pushToast("ステータス更新に失敗しました", "error");
+    }
+  }
+
+  function handleTransitionRequest(ticket: TaskCard, next: TaskCard["status"]) {
+    // §8.3: risk_score>=RISK_APPROVAL_THRESHOLD の遷移は承認モーダル必須。
+    if (ticket.risk_score >= RISK_APPROVAL_THRESHOLD) {
+      requestApproval({
+        title: `${ticket.id} を ${next} へ`,
+        description: ticket.title,
+        riskScore: ticket.risk_score,
+        details: [
+          { label: "現在のステータス", value: ticket.status },
+          { label: "遷移先", value: next },
+        ],
+        onApprove: () => applyStatusTransition(ticket, next, true),
+      });
+      return;
+    }
+    void applyStatusTransition(ticket, next);
+  }
+
+  async function handleRunTicket(ticket: TaskCard) {
+    try {
+      const updated = await api.runTicket(ticket.id);
+      setTickets((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
+      pushToast(`${ticket.id} の実行ループを開始しました`, "success");
+    } catch {
+      pushToast("実行に失敗しました", "error");
     }
   }
 
@@ -158,6 +199,31 @@ export function Dashboard() {
               <RiskBadge score={t.risk_score} />
               <CategoryBadge category={t.category} />
               <span className="flex-1">{t.title}</span>
+              <div className="flex flex-wrap gap-1">
+                {nextStatusOptions(t.status).map((next) => (
+                  <button
+                    key={next}
+                    type="button"
+                    onClick={() => handleTransitionRequest(t, next)}
+                    className="rounded-lg border border-jarvis-line px-2 py-0.5 text-xs text-jarvis-text2 hover:border-jarvis-accent hover:text-jarvis-accent"
+                  >
+                    → {next}
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  disabled={api.transportName !== "bridge"}
+                  title={
+                    api.transportName !== "bridge"
+                      ? "ブリッジ接続時のみ実行できます（Settings画面参照）"
+                      : undefined
+                  }
+                  onClick={() => handleRunTicket(t)}
+                  className="rounded-lg border border-jarvis-accent/40 px-2 py-0.5 text-xs font-semibold text-jarvis-accent hover:bg-jarvis-accent/20 disabled:cursor-not-allowed disabled:opacity-30"
+                >
+                  実行
+                </button>
+              </div>
             </li>
           ))}
         </ul>

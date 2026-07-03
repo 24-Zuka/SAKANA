@@ -12,11 +12,8 @@ macOS専用のため一部未対応（docs/DEVIATIONS.md参照）:
 
 from __future__ import annotations
 
-import shutil
-import sys
 import time
 from datetime import date
-from pathlib import Path
 
 import click
 
@@ -24,19 +21,17 @@ from .automation.launchd import JOB_BRIEF, JOB_GROOMING, JOB_INBOX
 from .automation.launchd import generate_brief_plist, generate_grooming_plist, generate_inbox_plist
 from .automation.launchd import install as launchd_install
 from .automation.launchd import is_macos as launchd_is_macos
+from .automation.launchd import resolve_airflowctl_bin as _airflowctl_bin
 from .automation.launchd import uninstall as launchd_uninstall
 from .config import AirflowConfig, check_no_api_keys
-from .inbox import import_inbox
+from .inbox import import_inbox, import_inbox_from_dir
 from .models import Category, Status
 from .obsidian import ObsidianClient, ObsidianError, ObsidianWriteRefused, export_brief
 from .orchestrator.run import run_ticket
 from .scheduler.brief import generate_brief
 from .scheduler.groom import groom as groom_store
+from .secrets import get_secret
 from .store.ticket_store import TicketStore
-
-
-def _airflowctl_bin() -> str:
-    return shutil.which("airflowctl") or str(Path(sys.executable).parent / "airflowctl")
 
 
 def _get_store(config: AirflowConfig) -> TicketStore:
@@ -112,21 +107,8 @@ def add(config: AirflowConfig, text: str) -> None:
 def import_inbox_cmd(config: AirflowConfig, once: bool) -> None:
     """inbox/ 配下の .md / .txt を取り込み、起票して processed/ へ退避する。"""
     store = _get_store(config)
-    count = _import_inbox_once(store, config)
+    count = import_inbox_from_dir(store, config.inbox_dir, config.inbox_processed_dir)
     click.echo(f"{count} 件のファイルを取り込みました。")
-
-
-def _import_inbox_once(store: TicketStore, config: AirflowConfig) -> int:
-    count = 0
-    for path in sorted(config.inbox_dir.glob("*")):
-        if path.is_dir() or path.suffix not in (".md", ".txt"):
-            continue
-        text = path.read_text(encoding="utf-8")
-        import_inbox(store, text)
-        dest = config.inbox_processed_dir / path.name
-        shutil.move(str(path), str(dest))
-        count += 1
-    return count
 
 
 @main.command(name="watch-inbox")
@@ -141,7 +123,7 @@ def watch_inbox(config: AirflowConfig, interval: float) -> None:
     )
     try:
         while True:
-            _import_inbox_once(store, config)
+            import_inbox_from_dir(store, config.inbox_dir, config.inbox_processed_dir)
             time.sleep(interval)
     except KeyboardInterrupt:
         click.echo("停止しました。")
@@ -255,3 +237,20 @@ def configure_obsidian(config: AirflowConfig, detect: bool, enable: bool, disabl
         click.echo("Obsidian書き出しを有効化しました（次回の朝礼生成から反映）。")
     elif not disable and not detect:
         click.echo("使い方: --detect / --enable / --disable のいずれかを指定してください。")
+
+
+@main.command(name="show-bridge-token")
+@click.pass_obj
+def show_bridge_token(config: AirflowConfig) -> None:
+    """開発ブリッジのBearerトークンを表示する（§7.3/§8.4）。
+
+    ブリッジは初回起動時にトークンを自動生成しKeychain/secrets.jsonへ保存するが、
+    値をログや標準出力へは一切出さない（Credential Materialization防止）。
+    Cockpitの設定画面に貼り付ける値は、このコマンドをユーザー自身の端末で
+    実行して確認する。
+    """
+    token = config.bridge_token or get_secret("bridge_token", home=config.home)
+    if not token:
+        click.echo("トークンは未生成です。一度ブリッジを起動すると自動生成されます。")
+        return
+    click.echo(token)
