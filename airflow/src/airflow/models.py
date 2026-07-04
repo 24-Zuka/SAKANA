@@ -85,3 +85,20 @@ class TaskCard(BaseModel):
         data = dict(post.metadata)
         data["body"] = post.content
         return cls.model_validate(data)
+
+
+# ステータス遷移図（§4.4）: Inbox -> Today -> Doing -> Waiting(要判断) -> Done
+#                                              └──────────> Done
+ALLOWED_STATUS_TRANSITIONS: dict[Status, set[Status]] = {
+    Status.INBOX: {Status.TODAY},
+    Status.TODAY: {Status.DOING},
+    Status.DOING: {Status.WAITING, Status.DONE},
+    Status.WAITING: {Status.DONE},
+    Status.DONE: set(),
+}
+
+
+def is_valid_status_transition(current: Status, target: Status) -> bool:
+    if current == target:
+        return True
+    return target in ALLOWED_STATUS_TRANSITIONS.get(current, set())

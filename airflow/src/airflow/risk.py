@@ -25,6 +25,7 @@ BASE_BY_CATEGORY: dict[Category, float] = {
 
 MIN_RISK_SCORE = 0.1
 MAX_RISK_SCORE = 5.0
+RISK_APPROVAL_THRESHOLD = 3.0  # §8.3: risk_score>=3.0 は承認モーダル必須
 
 EXTERNAL_SEND_KEYWORDS = (
     "メール送信",

@@ -5,6 +5,11 @@ on:
     branches:
       - main
       - claude/airflow-cockpit-desktop-58g8px
+      - claude/airflow-cockpit-desktop-58g8px-v2
+    paths:
+      - "jarvis-cockpit/**"
+      - ".github/workflows/deploy-pages.yml"
+  pull_request:
     paths:
       - "jarvis-cockpit/**"
       - ".github/workflows/deploy-pages.yml"
@@ -42,6 +47,7 @@ jobs:
 
   deploy:
     needs: build
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     environment:
       name: github-pages

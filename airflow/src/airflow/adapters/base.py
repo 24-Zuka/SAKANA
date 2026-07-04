@@ -8,13 +8,32 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Protocol
+from typing import Any, Protocol
 
 from ..models import Category
 
 
 class AdapterUnavailable(Exception):
     """ワーカーが疎通不可・失敗した場合に送出する。呼び出し側はフォールバックする（P7）。"""
+
+
+@dataclass
+class Result:
+    """§6共通IF: `run(prompt, context) -> Result`。"""
+
+    ok: bool
+    text: str
+    worker: str
+    elapsed: float
+    error: str | None = None
+
+
+class WorkerAdapter(Protocol):
+    """`run()` 共通IFを持つワーカー（Codex/Gemini等）のプロトコル。"""
+
+    worker: str
+
+    def run(self, prompt: str, context: dict[str, Any] | None = None) -> Result: ...
 
 
 @dataclass

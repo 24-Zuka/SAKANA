@@ -1,0 +1,12 @@
+# AirFlow 設定テンプレート — spec §12.2。
+# 実際に読み込まれるのは `<AIRFLOW_HOME>/config.toml`（既定 ~/.airflow/config.toml）。
+# このファイルをそこへコピーして編集する。環境変数（AIRFLOW_LM_STUDIO_URL等）は
+# ここでの設定より優先される。
+
+[lm_studio]
+base_url = "http://localhost:1234/v1"
+
+[obsidian]
+base_url = "http://127.0.0.1:27123"
+token = ""
+vault_path = ""

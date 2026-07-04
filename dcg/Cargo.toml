@@ -1,0 +1,11 @@
+[package]
+name = "dcg"
+version = "0.1.0"
+edition = "2021"
+description = "Destructive Command Guard — AirFlow spec section 8.2. 3-stage guard for destructive commands."
+
+[[bin]]
+name = "dcg"
+path = "src/main.rs"
+
+[dependencies]

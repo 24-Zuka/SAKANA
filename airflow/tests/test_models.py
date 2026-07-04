@@ -68,3 +68,28 @@ def test_priority_bounds():
         make_ticket(priority=0)
     with pytest.raises(ValidationError):
         make_ticket(priority=4)
+
+
+def test_status_transition_allows_forward_progression():
+    from airflow.models import is_valid_status_transition
+
+    assert is_valid_status_transition(Status.INBOX, Status.TODAY)
+    assert is_valid_status_transition(Status.TODAY, Status.DOING)
+    assert is_valid_status_transition(Status.DOING, Status.WAITING)
+    assert is_valid_status_transition(Status.DOING, Status.DONE)
+    assert is_valid_status_transition(Status.WAITING, Status.DONE)
+
+
+def test_status_transition_allows_noop():
+    from airflow.models import is_valid_status_transition
+
+    for s in Status:
+        assert is_valid_status_transition(s, s)
+
+
+def test_status_transition_rejects_invalid_jumps():
+    from airflow.models import is_valid_status_transition
+
+    assert not is_valid_status_transition(Status.INBOX, Status.DONE)
+    assert not is_valid_status_transition(Status.DONE, Status.TODAY)
+    assert not is_valid_status_transition(Status.WAITING, Status.TODAY)

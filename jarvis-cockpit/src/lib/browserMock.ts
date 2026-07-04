@@ -1,4 +1,5 @@
 import type { Brief, HealthStatus, TaskCard } from "../types/taskcard";
+import { RISK_APPROVAL_THRESHOLD } from "../types/taskcard";
 import type {
   AgentInfo,
   BuildLogLine,
@@ -11,6 +12,7 @@ import type {
   Worktree,
 } from "../types/cockpit";
 import type { AirflowApi } from "./apiTypes";
+import { isValidStatusTransition } from "./statusTransitions";
 
 const delay = (ms = 150) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -298,6 +300,38 @@ export const browserMock: AirflowApi = {
     nextTicketSeq += 1;
     tickets = [ticket, ...tickets];
     return ticket;
+  },
+
+  async updateTicketStatus(id, status, options) {
+    await delay(150);
+    const ticket = tickets.find((t) => t.id === id);
+    if (!ticket) throw new Error(`ticket ${id} not found`);
+    if (!isValidStatusTransition(ticket.status, status)) {
+      throw new Error(`invalid status transition: ${ticket.status} -> ${status}`);
+    }
+    if (ticket.risk_score >= RISK_APPROVAL_THRESHOLD && !options?.approved) {
+      throw new Error(`risk_score=${ticket.risk_score} requires approval`);
+    }
+    const now = new Date().toISOString();
+    const updated: TaskCard = { ...ticket, status, updated: now };
+    tickets = tickets.map((t) => (t.id === id ? updated : t));
+    return updated;
+  },
+
+  async runTicket(id) {
+    await delay(400);
+    const ticket = tickets.find((t) => t.id === id);
+    if (!ticket) throw new Error(`ticket ${id} not found`);
+    const now = new Date().toISOString();
+    const updated: TaskCard = {
+      ...ticket,
+      status: "Done",
+      decision_required: false,
+      updated: now,
+      log: [...ticket.log, `${now} Plan→Route→Execute→Verify 完了（mock）`],
+    };
+    tickets = tickets.map((t) => (t.id === id ? updated : t));
+    return updated;
   },
 
   async getLatestBrief(): Promise<Brief> {

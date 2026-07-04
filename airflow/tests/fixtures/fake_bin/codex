@@ -1,0 +1,26 @@
+#!/usr/bin/env python3
+import sys
+import json
+
+args = sys.argv[1:]
+
+if args[:2] == ["login", "status"]:
+    print("Logged in as test@example.com")
+    sys.exit(0)
+
+if args[:2] == ["exec", "--json"]:
+    prompt = args[2] if len(args) > 2 else ""
+    if prompt == "TRIGGER_FAILURE":
+        print("simulated failure", file=sys.stderr)
+        sys.exit(1)
+    lines = [
+        {"type": "message", "delta": "計画を"},
+        {"type": "message", "delta": "作成しました。"},
+        {"type": "result", "text": f"echo:{prompt}"},
+    ]
+    for line in lines:
+        print(json.dumps(line))
+    sys.exit(0)
+
+print(f"unknown args: {args}", file=sys.stderr)
+sys.exit(2)
